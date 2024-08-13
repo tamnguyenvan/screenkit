@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "screenkit"
+version = "0.1.0"
+authors = [
+    {name = "Tam Nguyen", email = "tamnvhustcc@gmail.com"},
+]
+description = "A simple and lightweight screen recorder."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "mss",
+    "Pillow",
+    "pynput",
+    "colorama",
+    "opencv-python",
+    "click"
+]
+
+[project.urls]
+Homepage = "https://x.com/tamnvvn"
+
+[project.scripts]
+screenkit = "screenkit.screenkit:cli"
+
+[tool.setuptools.packages.find]
+include = ["screenkit", "screenkit.*"]
+
+[tool.setuptools.package-data]
+screenkit = ["images/wallpapers/*", "images/*"]
