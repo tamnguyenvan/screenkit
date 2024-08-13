@@ -26,7 +26,8 @@ dependencies = [
     "pynput",
     "colorama",
     "opencv-python",
-    "click"
+    "click",
+    "tqdm"
 ]
 
 [project.urls]
