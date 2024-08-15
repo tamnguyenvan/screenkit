@@ -10,7 +10,8 @@ from screenkit.utils import pprint, pprint_table, Color
 from screenkit.trim import trim_video
 from screenkit import config
 
-CACHE_FILE = Path("video_cache.json")
+CACHE_FILE = Path(os.path.expanduser("~/.screenkit/video_cache.json"))
+
 
 def parse_region(ctx, param, value):
     if value is None or value == "custom":
