@@ -10,7 +10,7 @@ from screenkit.utils import pprint, pprint_table, Color
 from screenkit.trim import trim_video
 from screenkit import config
 
-CACHE_FILE = Path(os.path.expanduser("~/.screenkit/video_cache.json"))
+CACHE_FILE = Path("video_cache.json")
 
 
 def parse_region(ctx, param, value):
@@ -34,14 +34,19 @@ def parse_padding(ctx, param, value):
 
 def save_to_cache(output_path):
     """Saves the output path to the cache file."""
-    with open(CACHE_FILE, 'w') as f:
+    if not os.path.isdir(config.DEFAULT_CACHE_DIR):
+        os.makedirs(config.DEFAULT_CACHE_DIR, exist_ok=True)
+
+    cache_path = os.path.join(config.DEFAULT_CACHE_DIR, CACHE_FILE)
+    with open(cache_path, 'w') as f:
         json.dump({"output_path": output_path}, f)
 
 def load_from_cache():
     """Loads the output path from the cache file."""
-    if not CACHE_FILE.exists():
+    cache_path = os.path.join(config.DEFAULT_CACHE_DIR, CACHE_FILE)
+    if not cache_path.exists():
         raise FileNotFoundError("Cache file not found.")
-    with open(CACHE_FILE, 'r') as f:
+    with open(cache_path, 'r') as f:
         return json.load(f).get("output_path")
 
 @click.group()
