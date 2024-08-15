@@ -186,15 +186,12 @@ def enhance(video_path: str, output_path: str, data_path: Optional[str] = None, 
     fps = cap.get(cv2.CAP_PROP_FPS)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    space_x, space_y = max(0, screen_width - orig_width), max(0, screen_height - orig_height)
-    if space_x <= space_y:
-        padding_x = int(padding * screen_width) if isinstance(padding, float) and 0 <= padding <= 1 else int(padding)
-        padding_y = int(padding_x * orig_height / orig_width)
-    else:
-        padding_y = int(padding * screen_height) if isinstance(padding, float) and 0 <= padding <= 1 else int(padding)
-        padding_x = int(padding_y * orig_width / orig_height)
-    new_width = min(screen_width - 2 * padding_x, orig_width)
-    new_height = min(screen_height - 2 * padding_y, orig_height)
+    min_height = 100
+    padding_y = int(padding * screen_height) if isinstance(padding, float) and 0 <= padding <= 1 else int(padding)
+    padding_x = int(padding_y * orig_width / orig_height)
+    new_width = orig_width - 2 * padding_x
+    new_height = orig_height - 2 * padding_y
+    print('ori', orig_width, orig_height, padding_x, padding_y, new_width, new_height)
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_path, fourcc, fps, (screen_width, screen_height))
