@@ -93,6 +93,13 @@ class ScreenRecorder:
                 self.region = self.select_roi(screenshot)
                 if not self.region:
                     return
+            else:
+                screenshot = sct.grab(sct.monitors[0])
+                self.screen_height, self.screen_width = np.array(screenshot).shape[:2]
+                self.enhance_params.update({
+                    "screen_width": self.screen_width,
+                    "screen_height": self.screen_height
+                })
 
             frame_interval = 1 / self.fps
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
