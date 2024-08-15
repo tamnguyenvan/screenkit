@@ -21,13 +21,13 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "mss",
-    "Pillow",
-    "pynput",
-    "colorama",
-    "opencv-python",
-    "click",
-    "tqdm"
+    "mss=^9.0.1",
+    "Pillow=^10.4.0",
+    "pynput=^1.7.7",
+    "colorama=^0.4.6",
+    "opencv-python=^4.6.0.66",
+    "click=^8.1.7",
+    "tqdm=^4.66.5"
 ]
 
 [project.urls]

@@ -1,8 +1,10 @@
-from pathlib import Path
-import click
 import os
 import json
+from pathlib import Path
+
+import click
 from PIL import Image
+
 from screenkit.record import record_screen
 from screenkit.utils import pprint, pprint_table, Color
 from screenkit.trim import trim_video
@@ -13,6 +15,7 @@ CACHE_FILE = Path("video_cache.json")
 def parse_region(ctx, param, value):
     if value is None or value == "custom":
         return value
+
     try:
         x, y, w, h = map(int, value.split(','))
         return x, y, w, h
@@ -44,35 +47,37 @@ def load_from_cache():
 def cli():
     """ScreenKit CLI - A tool for screen recording with various features."""
     print(Color.YELLOW + """\
+
  ____                           _  ___ _
 / ___|  ___ _ __ ___  ___ _ __ | |/ (_) |_
 \___ \ / __| '__/ _ \/ _ \ '_ \| ' /| | __|
  ___) | (__| | |  __/  __/ | | | . \| | |_
 |____/ \___|_|  \___|\___|_| |_|_|\_\_|\__|
+
           """)
     pprint("Welcome to ScreenKit CLI!", color=Color.CYAN, bold=True)
 
 @cli.command()
-@click.option('-o', '--output', help="Output folder for screenshots and video")
-@click.option('-r', '--region', callback=parse_region, help="Screen region to capture (x,y,width,height)")
-@click.option('-f', '--fps', type=int, default=30, help="Frames per second (default: 30)")
-@click.option('-p', '--padding', callback=parse_padding, default=0.1, help="Padding for the beautified result (default: 0.1)")
-@click.option('-b', '--background', type=str, default="default-wallpaper-1", help="Background color for the recording (default: black)")
-@click.option('-w', '--webcam', type=str, default="0", help="Webcam id to be used")
+@click.option('-o', '--output', help="Output folder for screenshots and video", default=config.DEFAULT_OUTPUT_DIR)
+@click.option('-r', '--region', callback=parse_region, help="Screen region to capture (x,y,width,height) or custom. Full screen if not set")
+@click.option('-f', '--fps', type=int, default=config.DEFAULT_FPS, help=f"Frames per second (default: {config.DEFAULT_FPS})")
+@click.option('-p', '--padding', callback=parse_padding, default=config.DEFAULT_PADDING, help=f"Padding for the beautified result (default: {config.DEFAULT_PADDING})")
+@click.option('-b', '--background', type=str, default=config.DEFAULT_BACKGROUND, help=f"Background color for the recording (default: {config.DEFAULT_BACKGROUND})")
+@click.option('-w', '--webcam', type=str, default=config.DEFAULT_WEBCAM, help=f"Webcam id to be used (default: {config.DEFAULT_WEBCAM})")
 @click.option('--macos-titlebar', is_flag=True, help="Make the titlebar look like MacOS")
-@click.option('--border-radius', type=float, default=10, help="Border radius for the recording (default: 10)")
-@click.option('--cursor-scale', type=float, default=1.0, help="Cursor scale (default: 1.0)")
-@click.option('--shadow-blur', type=int, default=10, help="Shadow blur radius (default: 10)")
-@click.option('--shadow-opacity', type=float, default=0.5, help="Shadow opacity (default: 0.5)")
+@click.option('--border-radius', type=float, default=config.DEFAULT_BORDER_RADIUS, help=f"Border radius for the recording (default: {config.DEFAULT_BORDER_RADIUS})")
+@click.option('--cursor-scale', type=float, default=config.DEFAULT_CURSOR_SCALE, help=f"Cursor scale (default: {config.CURSOR_SCALE})")
+@click.option('--shadow-blur', type=int, default=config.DEFAULT_SHADOW_BLUR, help=f"Shadow blur radius (default: {config.DEFAULT_SHADOW_BLUR})")
+@click.option('--shadow-opacity', type=float, default=config.DEFAULT_SHADOW_OPACITY, help=f"Shadow opacity (default: {config.DEFAULT_SHADOW_OPACITY})")
 @click.option('--output-raw', is_flag=True, help="Output file for raw recording data")
-@click.option('--countdown', type=int, default=3, help="Countdown time before starting the recording in seconds (default: 3)")
+@click.option('--countdown', type=int, default=config.DEFAULT_COUNTDOWN, help=f"Countdown time before starting the recording in seconds (default: {config.DEFAULT_COUNTDOWN})")
 def record(output, region, fps, padding, background, webcam, macos_titlebar, border_radius, cursor_scale, shadow_blur, shadow_opacity, output_raw, countdown):
     """Start screen recording with specified options."""
     settings = {
         "Output folder": output,
         "Region": region if region else "Full screen",
         "FPS": fps,
-        "Padding": padding,
+        "Padding": f"{padding * 100}%" if 0 <= padding <= 1.0 else padding,
         "Background color": background,
         "Shadow blur": shadow_blur,
         "Shadow opacity": shadow_opacity,

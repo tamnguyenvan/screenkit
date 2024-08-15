@@ -49,29 +49,47 @@ class ScreenRecorder:
         return 0, 0
 
     def select_roi(self, screenshot: mss.screenshot.ScreenShot) -> Optional[Tuple[int, int, int, int]]:
+        scale = 0.7
         frame = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGRA2BGR)
-        x, y, w, h = cv2.selectROI("Select", frame, showCrosshair=False)
+        frame_height, frame_width = frame.shape[:2]
+        new_height, new_width = int(frame_height * scale), int(frame_width * scale)
+        scaled_frame = cv2.resize(frame, (new_width, new_height))
+
+        window_name = "Select region"
+        x, y, w, h = cv2.selectROI(window_name, scaled_frame, showCrosshair=False)
+        x, y = int(x / scale), int(y / scale)
+        w, h = int(w / scale), int(h / scale)
         cv2.destroyAllWindows()
         return (x, y, w, h) if w > 0 and h > 0 else None
 
-    def countdown(self) -> None:
+    def countdown(self, message) -> None:
         for i in range(self.countdown_time, 0, -1):
-            print(Color.CYAN + f"\r[ScreenKit] - Starting recording in {i} seconds...", end="", flush=True)
+            print(Color.MAGENTA + f"\r[ScreenKit] - {message} in {i} seconds...", end="", flush=True)
             time.sleep(1)
-        print(Color.CYAN + "\r[ScreenKit] - Recording started!                  ", end="", flush=True)
 
     def record(self) -> str:
-        pprint(f"[ScreenKit] - Recording started. Press Esc to finish. Ctrl+C to cancel.", Color.MAGENTA)
+        pprint(f"Recording started. Press Ctrl + Esc to finish. Ctrl+C to cancel.", Color.CYAN)
 
         with mss.mss() as sct:
-            screenshot = sct.grab(sct.monitors[0])
-            self.screen_height, self.screen_width = np.array(screenshot).shape[:2]
-            self.enhance_params.update({
-                "screen_width": self.screen_width,
-                "screen_height": self.screen_height
-            })
-
+            # Get the region would being recorded
             if self.region == "custom":
+                try:
+                    message = "A window for selecting custom region will be shown"
+                    self.countdown(message)
+                except KeyboardInterrupt:
+                    pprint("\nRecording cancelled.")
+                    if os.path.isfile(video_path):
+                        os.remove(video_path)
+                    return
+
+                screenshot = sct.grab(sct.monitors[0])
+                self.screen_height, self.screen_width = np.array(screenshot).shape[:2]
+                self.enhance_params.update({
+                    "screen_width": self.screen_width,
+                    "screen_height": self.screen_height
+                })
+
+                print()
                 self.region = self.select_roi(screenshot)
                 if not self.region:
                     return
@@ -83,13 +101,15 @@ class ScreenRecorder:
 
             if self.countdown_time > 0:
                 try:
-                    self.countdown()
+                    message = "Starting recording"
+                    self.countdown(message)
                 except KeyboardInterrupt:
-                    print("\nRecording cancelled.")
+                    pprint("\nRecording cancelled.")
                     if os.path.isfile(video_path):
                         os.remove(video_path)
                     return
 
+            print(Color.CYAN + "\r[ScreenKit] - Recording started!                  ", end="", flush=True)
             monitor = {"top": self.region[1], "left": self.region[0], "width": self.region[2], "height": self.region[3]} if self.region else sct.monitors[0]
             self.enhance_params["record_region"] = monitor
 
@@ -132,12 +152,11 @@ class ScreenRecorder:
             if video_writer:
                 video_writer.release()
 
-            print("")
+            print()
             pprint(f"Recording stopped. Enhancing video...", Color.GREEN)
 
             json_path = get_data_path(video_path)
             self.save_json_data(json_path)
-            pprint(f"Mouse events saved to {json_path}", Color.GREEN)
 
             output_path = os.path.join(self.output_dir, video_filename)
             output_path = enhance(
@@ -148,14 +167,16 @@ class ScreenRecorder:
             )
 
             os.remove(json_path)
-            print('')
             pprint(f"The result video is available at {output_path}", Color.GREEN)
             return output_path
 
     def on_key_press(self, key: keyboard.Key) -> bool:
-        if key == keyboard.Key.esc:
-            self.stop_recording = True
-            return False
+        try:
+            if key == keyboard.Key.esc and keyboard.Controller().pressed(keyboard.Key.ctrl):
+                self.stop_recording = True
+                return False
+        except AttributeError:
+            pass
         return True
 
     def save_json_data(self, json_path: str) -> None:
